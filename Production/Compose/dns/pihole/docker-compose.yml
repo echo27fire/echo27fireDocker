@@ -1,0 +1,36 @@
+version: "3"
+services:
+  pihole:
+    container_name: sinkhole
+    image: pihole/pihole:latest
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 67:67/udp
+      - 6200:80/tcp
+      - 6201:443/tcp
+    volumes:
+       - pihole_etc2:/etc/pihole/
+       - pihole_dns2:/etc/dnsmasq.d/
+       - /etc/localtime:/etc/localtime:ro
+    environment:
+      - WEBPASSWORD=
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    networks:
+      - dns_net
+
+volumes:
+  pihole_etc2:
+    external: false
+  pihole_dns2:
+    external: false
+
+networks:
+  dns_net:
+    name: dns_network
+    external: true

@@ -1,0 +1,18 @@
+version: '3'
+services:
+  watchtower:
+    container_name: dkr-updates
+    image: containrrr/watchtower:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      - TZ=America/New_York
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_INCLUDE_RESTARTING=ture
+      - WATCHTOWER_INCLUDE_STOPPED=ture
+      #- WATCHTOWER_POLL_INTERVAL=604800 # 7 days
+      #- WATCHTOWER_POLL_INTERVAL=120 # 2 min
+      - WATCHTOWER_POLL_INTERVAL=86400 # 24 hours
+      - WATCHTOWER_ROLLING-RESTART=ture
+    restart: unless-stopped

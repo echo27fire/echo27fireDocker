@@ -1,0 +1,57 @@
+version: '3'
+services:
+  deluge:
+    container_name: deluge-VPN
+    image: binhex/arch-delugevpn
+    ports:
+      - "8112:8112/TCP"
+      - "58846:58846/TCP"
+      - "58946:58946/TCP"
+      - "8118:8118/TCP"
+    volumes:
+       - /mnt/user/appdata/dl-stack/deluge/:/config:rw
+       - /mnt/user/Downloads/:/data
+    environment:
+       - VPN_ENABLED=yes
+       - VPN_USER=
+       - VPN_PASS=
+       - VPN_PROV=pia
+       - VPN_CLIENT=openvpn
+       - STRICT_PORT_FORWARD=yes
+       - ENABLE_PRIVOXY=yes
+       - LAN_NETWORK=10.0.0.0/26
+       - NAME_SERVERS=84.200.69.80,37.235.1.174,1.1.1.1,37.235.1.177,84.200.70.40,1.0.0.1
+       - DELUGE_DAEMON_LOG_LEVEL=info
+       - DELUGE_WEB_LOG_LEVEL=info
+       - DEBUG=false
+       - UMASK=000
+       - PUID=99
+       - PGID=100
+    restart: always  
+    networks:
+      - dlnet
+    cap_add:
+      - NET_ADMIN
+  
+  sabnzb:
+    container_name: sabnzb
+    image: binhex/arch-sabnzbd:latest
+    ports:
+      - "8090:8090"
+      - "8080:8080"
+    volumes:
+      - /mnt/user/Downloads/:/data:rw
+      - /mnt/user/appdata/dl-stack/sab/:/config:rw
+    environment:
+      - PGID=100
+      - PUID=99
+      - UMASK=000
+    restart: always
+    networks:
+      - dlnet
+
+
+volumes:
+  
+        
+

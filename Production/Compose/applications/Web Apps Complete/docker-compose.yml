@@ -1,0 +1,60 @@
+version: '3'
+services:
+  ngp:
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 81:81
+    volumes:
+      - ngp-data:/data
+      - ngp-letsencrypt:/etc/letsencrypt
+  bind:
+    image: pwa666/bind9:v1.3.87
+    restart: always
+    ports:
+      - 10000:10000
+      - 53:53
+    environment:
+      - GUI_PASSWORD=
+      - IPV6=disable
+    volumes:
+      - bind:/etc/bind
+  heimdall:
+    container_name: heimdall
+    image: linuxserver/heimdall:2.5.5
+    restart: always
+    ports:
+      - 10001:80
+      - 10002:443
+    volumes:
+      - heimdall:/config
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - HOST_HOSTNAME=Docker
+      - PUID=1000
+      - PGID=1000
+      - UMASK=027
+      - HOME=/root
+  search:
+    container_name: searXng
+    image: searxng/searxng:2023.2.20-d669da81
+    restart: always
+    ports: 
+      - 10003:8080
+    volumes:
+      - searx_data:/etc/searxng
+    environment:
+      - INSTANCE_NAME=
+volumes:
+  ngp-data:
+    external: false
+  ngp-letsencrypt:
+    external: false
+  bind:
+    external: false
+  heimdall:
+    external: false
+  searx_data:
+    external: false

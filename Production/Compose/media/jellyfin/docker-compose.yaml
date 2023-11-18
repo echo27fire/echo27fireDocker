@@ -1,0 +1,32 @@
+version: '3'
+services:
+  jellyfin:
+    container_name: jellyfin
+    image: linuxserver/jellyfin:latest
+    ports:
+      - "8096:8096"
+      - "8920:8920"
+      - "7359:7359/udp"
+      - "1900:1900/udp"
+    environment:
+      - PUID=1002
+      - PGID=1002
+      - NVIDIA_VISIBLE_DEVICES=
+    volumes:
+      - /mnt/user/PlexData/jellyfin:/config
+      - /mnt/user/TV:/data/tv
+      - /mnt/user/Movies:/data/movies
+      - /mnt/user/Anime:/data/anime_path
+      - /etc/timezone:/etc:timezone
+    restart: unless-stopped
+    networks:
+      - jellynet
+
+networks:
+  jellynet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.0.25.0/24
+          gateway: 172.0.25.1

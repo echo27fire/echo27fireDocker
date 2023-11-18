@@ -1,0 +1,56 @@
+version: "3"
+services:
+  gluetun:
+    container_name: gluetun
+    image: qmcgaw/gluetun
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - /mnt/user/appdata/vpn:/gluetun
+    environment:
+      - HTTPPROXY=
+      - SHADOWSOCKS=
+      - VPN_SERVICE_PROVIDER=
+      - OPENVPN_USER=
+      - OPENVPN_PASSWORD=
+      - SERVER_REGIONS=
+    restart: on-failure:1
+    ports:
+      - "911:8888/tcp" # http proxy
+      - "8388:8388/tcp" # shadowsocks
+      - "8388:8388/udp" # shadowsocks
+      - "8112:8112" # deluge port
+      - "58846:58846" # deluge port
+      - "58946:58946" # deluge port
+      - "8090:8090" # sabnzb port
+      - "8080:8080" # sabnzb port
+  deluge:
+    container_name: deluge-basic
+    image: binhex/arch-deluge
+    volumes:
+       - /mnt/user/appdata/dl-stack/deluge/:/config:rw
+       - /mnt/user/Downloads/:/data
+       - /etc/localtime:/etc/localtime:ro
+    environment:
+      - DELUGE_DAEMON_LOG_LEVEL=error
+      - DELUGE_WEB_LOG_LEVEL_error
+      - UMASK = 000
+      - PUID=99
+      - PGID=100
+    depends_on:
+      - gluetun
+    network_mode: "service:gluetun"
+  sabnzb:
+    container_name: sabnzb
+    image: binhex/arch-sabnzbd:latest
+    volumes:
+      - /mnt/user/Downloads/:/data:rw
+      - /mnt/user/appdata/dl-stack/sab/:/config:rw
+    environment:
+      - PGID=100
+      - PUID=99
+      - UMASK=000
+    restart: on-failure:1
+    depends_on:
+      - gluetun
+    network_mode: "service:gluetun"   

@@ -1,0 +1,41 @@
+# docker compose file for snipe-it asset manager
+
+version: '3'
+volumes:
+  snipe-it:
+  db:
+
+services:
+  snipe-it:
+    image: linuxserver/snipe-it:latest
+    container_name: snipe
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - APP_URL=$SNIPE_URL # variable
+      - MYSQL_PORT_3306_TCP_ADDR=$DB_ADDR # variable
+      - MYSQL_PORT_3006_TCP_PORT=$DB_PORT # variable
+      - MYSQL_DATABASE=$DB # variable
+      - MYSQL_USER=$USER # variable
+      - MYSQL_PASSWORD=$DB_PASS # variable
+    volumes:
+      - snipe-it:/config
+    ports:
+      - 30000:80
+    restart: on-failure:5
+    depends_on:
+      - db
+  
+  db:
+    image: mysql:8.0.32  # database and version tag
+    container_name: mysql 
+    environment:
+      - MYSQL_DATABASE=$DB #variable
+      - MYSQL_USER=$USER # variable
+      - MYSQL_PASSWORD=$DB_PASS # variable
+      - MYSQL_ROOT_PASSWORD=$DB_ROOT_PW # variable
+    ports:
+      - 3306:3306 
+    volumes:
+      - db:/var/lib/mysql
+  

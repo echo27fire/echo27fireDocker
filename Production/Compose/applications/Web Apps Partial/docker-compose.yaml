@@ -1,0 +1,34 @@
+version: '3'
+services:
+  heimdall:
+    container_name: heimdall
+    image: linuxserver/heimdall:2.5.5
+    restart: always
+    ports:
+      - 10001:80
+      - 10002:443
+    volumes:
+      - heimdall:/config
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - HOST_HOSTNAME=Docker
+      - PUID=1000
+      - PGID=1000
+      - UMASK=027
+      - HOME=/root
+  search:
+    container_name: searXng
+    image: searxng/searxng:2023.2.20-d669da81
+    restart: always
+    ports: 
+      - 10003:8080
+    volumes:
+      - searx_data:/etc/searxng
+    environment:
+      - INSTANCE_NAME=
+
+volumes:
+  heimdall:
+    external: false
+  searx_data:
+    external: false

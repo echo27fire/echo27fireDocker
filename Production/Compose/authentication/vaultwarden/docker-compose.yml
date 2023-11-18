@@ -1,0 +1,53 @@
+version: '3'
+services:
+  vaultwarden:
+    image: vaultwarden/server:1.28.0-alpine
+    container_name: vaultwarden
+    ports:
+      - 5000:80/TCP
+      - 5001:443/tcp
+    volumes:
+      - vaultwarden:/data
+    environment:
+      - SIGNUPS_ALLOWED=true
+      - INVITATIONS_ALLOWED=false
+      - ADMIN_TOKEN=$ADMIN
+      - YUBICO_CLIENT_ID=$YUBI_CLIENT
+      - YUBICO_SECRET_KEY=$YUBI_SECRET
+      - WEBSOCKET_ENABLED=true
+    restart: always
+  backup-local:
+    image: bruceforce/vaultwarden-backup
+    container_name: vw-backup-local
+    volumes:
+      - vaultwarden:/data:ro
+      - $BACKUP_LOCAL:/backups
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TIMESTAMP=true
+      - DELETE_AFTER=30
+      - CRON_TIME=$CRON
+      - BACKUP_ADD_CONFIG_JSON=true
+      - BACKUP_ADD_DATABASE=true
+      - BACKUP_ADD_ATTACHMENTS=true
+      - BACKUP_ADD_RSA_KEY=true
+  backup-remote:
+    image: bruceforce/vaultwarden-backup
+    container_name: vw-backup-remote
+    volumes:
+      - vaultwarden:/data:ro
+      - $BACKUP_REMOTE:/backups
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TIMESTAMP=true
+      - DELETE_AFTER=30
+      - CRON_TIME=$CRON
+      - BACKUP_ADD_CONFIG_JSON=true
+      - BACKUP_ADD_DATABASE=true
+      - BACKUP_ADD_ATTACHMENTS=true
+      - BACKUP_ADD_RSA_KEY=true
+
+volumes:
+  vaultwarden:
+    external: false
+

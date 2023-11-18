@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  guacd:
+    image: guacamole/guacd
+    restart: always
+
+  guacamole:
+    image: guacamole/guacamole
+    restart: always
+    depends_on:
+      - guacd
+      - mysql
+    links:
+      - guacd:guacd
+      - mysql:mysql
+    environment:
+      GUACD_HOSTNAME: guacd
+      GUACD_PORT: 4822
+      MYSQL_HOSTNAME: ${HOST_IP}
+      MYSQL_PORT: ${DB_PORT}
+      MYSQL_DATABASE: ${DB_DBSE}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+      TOTP_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+
+  mysql:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT}
+      MYSQL_DATABASE: ${DB_DBSE}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+
+
+volumes:
+  mysql-data:
+ 

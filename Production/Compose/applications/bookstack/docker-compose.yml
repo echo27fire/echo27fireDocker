@@ -1,0 +1,36 @@
+version: '3.5'
+volumes:
+  bookstack:
+  database:
+services:
+  bookstack:
+    image: linuxserver/bookstack:23.02.1
+    container_name: bookstack
+    environment:
+      - PUID=99
+      - PGID=100
+      - DB_HOST=bookstack_db
+      - DB_PORT=3306
+      - DB_USER=$DB_USER
+      - DB_PASS=$DB_PASS_USER
+      - DB_DATABASE=$MYSQL_DATABASE
+    depends_on:
+      - bookstack_db
+    volumes:
+      - bookstack:/config
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 6875:80
+  bookstack_db:
+    image: linuxserver/mariadb
+    container_name: bookstack_db
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - MYSQL_ROOT_PASSWORD=$DB_PASS
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+      - MYSQL_USER=$DB_USER
+      - MYSQL_PASSWORD=$DB_PASS_USER
+    volumes:
+      - database:/config
+      - /etc/localtime:/etc/localtime:ro

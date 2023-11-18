@@ -1,0 +1,88 @@
+version: '3'
+services:
+  radarr:
+    container_name: radarr-2
+    image: linuxserver/radarr
+    ports:
+      - "7878:7878"
+    volumes:
+      - ${movies_path}:/movies
+      - ${downloads}:/data
+      - ${arr_path}/arr-stack/radarr-data:/config:rw
+    environment:
+      - PUID=${PUID_var}
+      - PGID=${PGID_var}
+      - UMASK=${UMASK_var}
+    restart: always
+    networks:
+      - arrnet  
+  sonarr:
+    container_name: sonarr-2
+    image: linuxserver/sonarr
+    ports:
+      - "8989:8989"
+    volumes:
+      - ${tv_path}:/tv
+      - ${anime_path}:/Anime
+      - ${downloads}:/data
+      - ${arr_path}/arr-stack/sonarr-data:/config:rw
+    environment:
+      - PUID=${PUID_var}
+      - PGID=${PGID_var}
+      - UMASK=${UMASK_var}
+    restart: always
+    networks:
+      - arrnet
+  lidarr:
+    container_name: lidarr-2
+    image: linuxserver/lidarr
+    ports:
+      - "8686:8686"
+    volumes:
+      - ${music_path}:/media
+      - ${downloads}:/data
+      - ${arr_path}/arr-stack/lidarr-data:/config:rw
+    environment:
+      - PUID=${PUID_var}
+      - PGID=${PGID_var}
+      - UMASK=${UMASK_var}
+    restart: always
+    networks:
+      - arrnet
+  overseerr:
+    container_name: overseerr-2
+    image: linuxserver/overseerr
+    ports:
+      - "5055:5055"
+    volumes:
+      - ${arr_path}/arr-stack/overseerr-data:/config:rw
+    environment:
+      - PUID=${PUID_var}
+      - PGID=${PGID_var}
+      - UMASK=${UMASK_var}
+    restart: always
+    networks:
+      - arrnet
+  prowlarr:
+    container_name: prowlarr-2
+    image: linuxserver/prowlarr:nightly
+    ports:
+      - "9696:9696"
+    volumes:
+      - ${arr_path}/arr-stack/prowlarr-data:/config:rw
+    environment:
+      - PUID=${PUID_var}
+      - PGID=${PGID_var}
+      - UMASK=${UMASK_var}
+    restart: always
+    networks:
+      - arrnet
+
+networks:
+  arrnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.100.200.0/24
+          gateway: 172.100.200.1

@@ -1,0 +1,29 @@
+version: "3"
+services:
+  pi:
+    container_name: pihole_v6
+    image: pihole/pihole:latest
+    restart: unless-stopped
+    environment:
+      - WEBPASSWORD=$password
+      - ServerIP=66.228.47.252
+      - enable_ipv6=true
+      - ServerIPv6=
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 82:80/tcp
+      - 67:67/udp
+      - 83:443/tcp
+    volumes:
+      - pihole_etc_v6:/etc/pihole
+      - pihole_dns_v6:/etc/dnsmasq.d
+      - /etc/localtime:/etc/localtime:ro
+
+volumes:
+  pihole_etc_v6:
+    external: false
+  pihole_dns_v6:
+    external: false
