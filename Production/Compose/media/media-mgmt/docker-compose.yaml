@@ -2,7 +2,7 @@ version: '3'
 services:
   radarr:
     container_name: radarr-2
-    image: linuxserver/radarr
+    image: linuxserver/radarr:latest
     ports:
       - "7878:7878"
     volumes:
@@ -18,7 +18,7 @@ services:
       - arrnet  
   sonarr:
     container_name: sonarr-2
-    image: linuxserver/sonarr
+    image: linuxserver/sonarr:latest
     ports:
       - "8989:8989"
     volumes:
@@ -35,7 +35,7 @@ services:
       - arrnet
   lidarr:
     container_name: lidarr-2
-    image: linuxserver/lidarr
+    image: linuxserver/lidarr:latest
     ports:
       - "8686:8686"
     volumes:

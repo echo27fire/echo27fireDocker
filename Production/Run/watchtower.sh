@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# This script runs a Docker container named "watchtower" using the containrrr/watchtower image.
+# The container is set to restart always and mounts the Docker socket for communication with the host's Docker daemon.
+# It also configures email notifications for watchtower updates.
+# The email settings include the email addresses for sending and receiving notifications,
+# the SMTP server details, and the delay between sending notifications.
+# Make sure to replace the placeholder values with the actual email addresses and server credentials.
+
 docker run -d \
  --restart=always \
  --name watchtower \

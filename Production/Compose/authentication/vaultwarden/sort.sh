@@ -1,14 +1,13 @@
 #!/bin/bash
 
 # labels
-DB_NAME='*db.sqlite3'
-DATA_NAME='data.tar.gz'
-EX_DATA=$(date +%Y-%m-%d-%h-%m)
-
+DB_NAME='*db.sqlite3'  # The pattern to match for the database file
+DATA_NAME='data.tar.gz'  # The name of the data file
+EX_DATA=$(date +%Y-%m-%d-%h-%m)  # The current date and time in a specific format
 
 # local
-DB_PATH=db
-DATA_PATH=data
+DB_PATH=db  # The directory to move the database file to
+DATA_PATH=data  # The directory to move the data file to
 
 # scripts moves into the proper directory where the VW backups are stored
 cd "$LOCAL_BACKUP_PATH" || exit
