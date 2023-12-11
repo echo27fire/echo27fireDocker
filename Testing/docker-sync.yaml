@@ -1,0 +1,172 @@
+# Ansible playbook to sync docker volumes between hosts and verify all service accounts are correct
+
+- name: Sync docker volumes
+  hosts: all
+  become: true
+  tasks:
+    - name: Sync docker volumes
+      synchronize:
+        src: /var/lib/docker/volumes/
+        dest: /var/lib/docker/volumes/
+        mode: pull
+        rsync_opts:
+          - "--rsync-path='sudo rsync'"
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['docker'] }}"
+
+- name: Verify docker service accounts
+  hosts: all
+  become: true
+  tasks:
+    - name: Check if docker_sync user exists
+      command: id -u docker_sync
+      register: docker_sync_user_check
+      ignore_errors: true
+
+    - name: Create docker_sync user
+      user:
+        name: docker_sync
+        password: "{{ 'test-pass' | password_hash('sha512') }}"
+        state: present
+      when: docker_sync_user_check.rc != 0
+
+    - name: Verify docker_sync service accounts
+      shell:
+        cmd: "docker exec -it docker-sync bash -c 'cat /etc/passwd | grep docker_sync'"
+        warn: false
+
+
+
+- name: Stop and save containers
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Get running containers
+      command: docker ps --format "{{.Names}}"
+      register: running_containers
+
+    - name: Stop and save containers
+      command: docker stop "{{ item }}" && echo "Stopped container: {{ item }}" || echo "Failed to stop container: {{ item }}"
+      with_items: "{{ running_containers.stdout_lines }}"
+      register: stop_result
+      changed_when: false
+
+    - name: Save stopped containers to file
+      lineinfile:
+        path: "{{ volume_archive_path }}/stopped_containers.txt"
+        line: "{{ item }}"
+      with_items: "{{ running_containers.stdout_lines }}"
+      when: stop_result.stdout_lines | length > 0
+
+- name: Untar volume archive
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Untar volume archive
+      unarchive:
+        src: "{{ volume_archive_path }}/{{ item }}"
+        dest: "{{ Docker_Path }}"
+        extra_opts: --no-overwrite-dir
+      with_fileglob: "{{ volume_archive_path }}/*.tar.gz"
+
+- name: Archive docker volumes
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Archive docker volumes
+      find:
+        paths: "{{ Docker_Path }}"
+        patterns: "*"
+        file_type: file
+      register: docker_volumes
+
+    - name: Archive docker volumes
+      archive:
+        path: "{{ Docker_Path }}/{{ item.path }}"
+        dest: "{{ volume_archive_path }}/{{ item.path | basename }}.tar.gz"
+      with_items: "{{ docker_volumes.files }}"
+
+- name: Create checksums
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create checksums
+      find:
+        paths: "{{ volume_archive_path }}"
+        patterns: "*.tar.gz"
+      register: volume_archives
+
+    - name: Create checksums
+      command: md5sum "{{ item.path }}"
+      register: checksums
+      with_items: "{{ volume_archives.files }}"
+
+    - name: Save checksums to file
+      copy:
+        content: "{{ item.stdout }}\n"
+        dest: "{{ volume_archive_path }}/checksums.md5"
+        mode: "0644"
+      with_items: "{{ checksums.results }}"
+
+- name: Copy archive to target
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Copy archive to target
+      command: scp -r "{{ volume_archive_path }}" "{{ remote_host }}:{{ volume_archive_path }}"
+
+- name: Verify copy
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Verify copy
+      command: ssh "{{ remote_host }}" "cd {{ volume_archive_path }} && md5sum -c checksums.md5"
+      register: verify_result
+
+    - name: Check if volume copied successfully
+      lineinfile:
+        path: "{{ Log_Path }}"
+        line: "Volume copied successfully"
+      when: verify_result.rc == 0
+
+    - name: Check if volume copy failed
+      lineinfile:
+        path: "{{ Log_Path }}"
+        line: "Volume copy failed"
+      when: verify_result.rc != 0
+
+- name: Restart stopped containers
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Restart stopped containers
+      command: docker start "{{ item }}"
+      with_lines: cat "{{ volume_archive_path }}/stopped_containers.txt"
+      register: restart_result
+      changed_when: false
+      ignore_errors: true
+
+- name: After action message
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Display stopped containers
+      command: cat "{{ volume_archive_path }}/stopped_containers.txt"
+      register: stopped_containers
+
+    - name: Display stopped containers
+      debug:
+        var: stopped_containers.stdout_lines
+
+    - name: Display after action message
+      debug:
+        msg: |
+          Here are the containers that were backed up to {{ remote_host }}:
+          {{ stopped_containers.stdout }}
+          ----------------------------------------
+          ----------------------------------------
+          Please verify that no net-new containers were created since last backup.
+          If there are net-new containers, please recreate them here and restart them.
+          Please also update containers to use the latest images for update testing.
+
+
